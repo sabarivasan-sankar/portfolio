@@ -19,19 +19,19 @@ const links = [
 
 function Navbar() {
   return (
-    <nav className="flex justify-between py-4 px-16 border-b border-b-outline-variant/30 bg-surface/70">
+    <header className="flex justify-between py-4 px-16 border-b border-b-outline-variant/30 bg-surface/70">
       <div className="font-serif4 font-bold text-2xl text-primary">
         Sabarivasan Sankar
       </div>
-      <div className="flex gap-8 items-center">
+      <div className="gap-8 items-center hidden md:flex">
         {links.map((link) => (
-          <div className="font-inter" href={`#{link.link}`}>{link.name}</div>
+          <div className="font-inter" key={link.id} href={`#{link.link}`}>
+            {link.name}
+          </div>
         ))}
       </div>
-      <div>
-        <button className="btn-contained">Resume</button>
-      </div>
-    </nav>
+      <button className="btn-contained h-fit">Resume</button>
+    </header>
   );
 }
 
