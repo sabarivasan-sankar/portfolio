@@ -1,150 +1,114 @@
 import React, { useEffect, useRef } from 'react';
 
-export const BackgroundShader = () => {
+export const RippleCanvas = () => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
-    function syncSize() {
-      if (!canvas) return;
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      if (canvas.width !== w || canvas.height !== h) {
-        canvas.width = w;
-        canvas.height = h;
-      }
-    }
-
-    syncSize();
-    window.addEventListener('resize', syncSize);
-
-    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-    if (!gl) return;
-
-    const vs = `
-      attribute vec2 a_position;
-      varying vec2 v_texCoord;
-      void main() {
-        v_texCoord = a_position * 0.5 + 0.5;
-        gl_Position = vec4(a_position, 0.0, 1.0);
-      }
-    `;
-
-    const fs = `
-      precision highp float;
-
-      varying vec2 v_texCoord;
-      uniform float u_time;
-      uniform vec2 u_resolution;
-      uniform vec2 u_mouse;
-
-      void main() {
-          vec2 uv = v_texCoord;
-          vec2 center = u_mouse / u_resolution;
-          
-          // Light Emerald / Airy Palette
-          vec3 color1 = vec3(0.95, 0.98, 0.96); // Soft emerald tint
-          vec3 color2 = vec3(0.98, 0.99, 0.98); // Crisp warm white
-          vec3 color3 = vec3(0.0, 0.21, 0.15);  // Signature Emerald Dark (#003527)
-
-          float t = u_time * 0.2;
-          
-          // Slow, organic movement
-          float noise = sin(uv.x * 2.0 + t) * cos(uv.y * 1.5 - t * 0.5);
-          noise += sin(uv.y * 3.0 + t * 0.8) * cos(uv.x * 2.5 - t * 0.3);
-          noise = noise * 0.5 + 0.5;
-          
-          // Very subtle mouse glow
-          float dist = distance(uv, center);
-          float glow = smoothstep(0.5, 0.0, dist) * 0.15;
-          
-          // Airy blend
-          vec3 finalColor = mix(color2, color1, noise * 0.35);
-          finalColor = mix(finalColor, color3, pow(noise, 8.0) * 0.06); // Faint hints of emerald
-          finalColor += color3 * glow * 0.2;
-          
-          // Subtle grid overlay for "tech" feel
-          float grid = abs(sin(uv.x * 50.0)) * abs(sin(uv.y * 50.0));
-          finalColor = mix(finalColor, color1, pow(grid, 0.1) * 0.02);
-
-          gl_FragColor = vec4(finalColor, 1.0);
-      }
-    `;
-
-    function cs(type, src) {
-      if (!gl) return null;
-      const s = gl.createShader(type);
-      if (!s) return null;
-      gl.shaderSource(s, src);
-      gl.compileShader(s);
-      return s;
-    }
-
-    const vertShader = cs(gl.VERTEX_SHADER, vs);
-    const fragShader = cs(gl.FRAGMENT_SHADER, fs);
-    if (!vertShader || !fragShader) return;
-
-    const prog = gl.createProgram();
-    if (!prog) return;
-    gl.attachShader(prog, vertShader);
-    gl.attachShader(prog, fragShader);
-    gl.linkProgram(prog);
-    gl.useProgram(prog);
-
-    const buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
-
-    const pos = gl.getAttribLocation(prog, 'a_position');
-    gl.enableVertexAttribArray(pos);
-    gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
-
-    const uTime = gl.getUniformLocation(prog, 'u_time');
-    const uRes = gl.getUniformLocation(prog, 'u_resolution');
-    const uMouse = gl.getUniformLocation(prog, 'u_mouse');
-
-    let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-
-    const handleMouseMove = (event) => {
-      const rect = canvas.getBoundingClientRect();
-      if (rect.width && rect.height) {
-        const nx = (event.clientX - rect.left) / rect.width;
-        const ny = 1.0 - (event.clientY - rect.top) / rect.height;
-        mouse.x = nx * canvas.width;
-        mouse.y = ny * canvas.height;
-      }
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
     let animationFrameId;
+    let width = (canvas.width = canvas.offsetWidth);
+    let height = (canvas.height = canvas.offsetHeight);
 
-    function render(t) {
-      if (!canvas || !gl) return;
-      gl.viewport(0, 0, canvas.width, canvas.height);
-      if (uTime) gl.uniform1f(uTime, t * 0.001);
-      if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
-      if (uMouse) gl.uniform2f(uMouse, mouse.x, mouse.y);
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    const handleResize = () => {
+      if (!canvas) return;
+      width = canvas.width = canvas.offsetWidth;
+      height = canvas.height = canvas.offsetHeight;
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    let time = 0;
+
+    const render = () => {
+      time += 0.012;
+      ctx.clearRect(0, 0, width, height);
+
+      // Smooth drifting movement across the canvas
+      const baseX = width > 768 ? width * 0.62 : width * 0.5;
+      const baseY = height * 0.5;
+
+      const blobX = baseX + Math.sin(time * 0.5) * (width * 0.18);
+      const blobY = baseY + Math.cos(time * 0.7) * (height * 0.2);
+
+      // Growth cycle: Grows from 0 to full scale (~1.3) and scales down smoothly back toward 0
+      const rawScale = (Math.sin(time * 0.4) + 1) / 2; // 0 to 1
+      const scale = Math.pow(rawScale, 1.2) * 1.3;
+
+      if (scale > 0.01) {
+        ctx.save();
+        ctx.translate(blobX, blobY);
+        ctx.scale(scale, scale);
+
+        const baseRadius = Math.min(width, height) * 0.35;
+
+        // Generate points for smooth organic curve
+        const numPoints = 8;
+        const points = [];
+
+        for (let i = 0; i < numPoints; i++) {
+          const angle = (i / numPoints) * Math.PI * 2;
+          // Smooth, non-polygonal organic deformation
+          const wobble =
+            Math.sin(angle * 2 + time * 1.2) * 28 +
+            Math.cos(angle * 3 - time * 0.8) * 20;
+          const r = baseRadius + wobble;
+          points.push({
+            x: Math.cos(angle) * r,
+            y: Math.sin(angle) * r,
+          });
+        }
+
+        // Draw perfectly smooth, curvy blob using quadratic curves through midpoints
+        ctx.beginPath();
+        const lastPt = points[numPoints - 1];
+        const firstPt = points[0];
+        ctx.moveTo((lastPt.x + firstPt.x) / 2, (lastPt.y + firstPt.y) / 2);
+
+        for (let i = 0; i < numPoints; i++) {
+          const curr = points[i];
+          const next = points[(i + 1) % numPoints];
+          const midX = (curr.x + next.x) / 2;
+          const midY = (curr.y + next.y) / 2;
+          ctx.quadraticCurveTo(curr.x, curr.y, midX, midY);
+        }
+        ctx.closePath();
+
+        // Fill with rich organic gray gradient
+        const grad = ctx.createRadialGradient(0, 0, baseRadius * 0.1, 0, 0, baseRadius * 1.1);
+        grad.addColorStop(0, '#c4cbd4');
+        grad.addColorStop(0.5, '#a4adb9');
+        grad.addColorStop(0.85, '#88919e');
+        grad.addColorStop(1, 'rgba(120, 128, 140, 0)');
+
+        ctx.fillStyle = grad;
+        ctx.shadowColor = 'rgba(100, 110, 125, 0.2)';
+        ctx.shadowBlur = 35;
+        ctx.fill();
+
+        ctx.restore();
+      }
+
       animationFrameId = requestAnimationFrame(render);
-    }
+    };
 
-    animationFrameId = requestAnimationFrame(render);
+    render();
 
     return () => {
-      window.removeEventListener('resize', syncSize);
-      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(animationFrameId);
     };
   }, []);
 
   return (
-    <div className="fixed inset-0 w-full h-full -z-10 pointer-events-none opacity-40">
-      <canvas id="shader-canvas" ref={canvasRef} className="block w-full h-full" />
-    </div>
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-none -z-10"
+    />
   );
 };
 
-export default BackgroundShader;
+export default RippleCanvas;
