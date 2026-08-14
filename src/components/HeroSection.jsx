@@ -1,50 +1,33 @@
 import { useGSAP } from "@gsap/react";
-import { cn } from "../lib/utils";
 import gsap from "gsap";
 import { SplitText } from "gsap/all";
+import BackgroundShader from "./Shader";
 
 const HeroSection = () => {
   useGSAP(() => {
-    let split = new SplitText(".role", {
-      type: "words",
-    });
-    let codeSplit = new SplitText(".code-body", {
+    const codeSplit = new SplitText(".code-body", {
       type: "chars",
     });
 
-    const tl = gsap.timeline();
-    tl.from([".name", ".role"], {
-      opacity: 0,
-      y: 30,
-      ease: "sine.in",
-    });
-    // split.words.forEach((char) => {
-    //   tl.fromTo(
-    //     char,
-    //     {
-    //       x: 0,
-    //       y: -20,
-    //       opacity: 0,
-    //       rotate: 30,
-    //     },
-    //     { x: 0, y: 0, duration: 0.4, opacity: 1, rotate: 0 },
-    //   );
-    // });
-    tl.from(".description", {
-      y: 30,
-      opacity: 0,
-      ease: "sine.in",
-    });
+    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+    tl.from(".name-and-role .font-jet", { opacity: 0, y: 20, duration: 0.5 })
+      .from([".name", ".role"], { opacity: 0, y: 30, duration: 0.7 }, "-=0.25")
+      .from(".description", { y: 20, opacity: 0, duration: 0.6 }, "-=0.3")
+      .from(".hero-actions > *", { y: 16, opacity: 0, duration: 0.5, stagger: 0.1 }, "-=0.3")
+      .from(".code", { y: 30, opacity: 0, duration: 0.7, ease: "power3.out" }, "-=0.6");
+
     gsap.from(codeSplit.chars, {
       opacity: 0,
       duration: 0.012,
       stagger: 0.014,
       ease: "none",
+      delay: 0.9,
     });
   }, []);
   return (
-      <section id="home" className="p-4 flex justify-around items-center-safe flex-wrap gap-6 min-h-[calc(100vh-73px)]">
-        <div className="content elative flex flex-col gap-8 ">
+      <section id="home" className="relative overflow-hidden p-4 flex justify-around items-center-safe flex-wrap gap-6 min-h-[calc(100vh-81px)] scroll-mt-24">
+        <BackgroundShader />
+        <div className="content relative flex flex-col gap-8 ">
           <div className="absolute top-0 left-20 w-120 h-120 rounded-full bg-secondary-fixed/10 blur-3xl pointer-events-none -z-10" />
           <div className="name-and-role">
             <div className="font-jet text-sm text-secondary leading-5 tracking-widest pb-3">
@@ -62,16 +45,16 @@ const HeroSection = () => {
             modern web architectures,
             <br /> scalable backends, and intuitive user experiences.
           </div>
-          <div className="flex gap-4">
-            <button className="btn-contained py-4 px-8 rounded-sm">
+          <div className="hero-actions flex gap-4">
+            <a href="#projects" className="btn-contained py-4 px-8 rounded-sm">
               View Work
-            </button>
-            <button className="btn-outlined py-4 px-8 rounded-sm">
+            </a>
+            <a href="#contact" className="btn-outlined py-4 px-8 rounded-sm">
               Get in Touch
-            </button>
+            </a>
           </div>
         </div>
-        <div className="code">
+        <div className="code w-full min-w-0 sm:w-auto">
           <div className="shadow-secondary-fixed all-shadow">
             <div className="flex bg-inverse-surface border border-outline-variant/20 px-4 py-3 rounded-t-xl justify-between items-center">
               <div className="flex gap-2">
@@ -95,7 +78,7 @@ const HeroSection = () => {
                 </svg>
               </div>
             </div>
-            <div className="code-body bg-[#0F172A] p-6 font-jet rounded-b-xl pr-20 whitespace-pre">
+            <div className="code-body bg-[#0F172A] p-4 sm:p-6 font-jet text-[13px] sm:text-base rounded-b-xl pr-6 sm:pr-20 whitespace-pre overflow-x-auto max-w-full">
               <span className="text-tertiary-fixed">const </span>
               <span className="text-secondary-fixed">developer</span>
               <span className="text-surface-variant">{` = {`}</span>
