@@ -61,21 +61,25 @@ export const experienceFocus = [
 export const skillGroups = [
   {
     title: "Languages",
+    caption: "What I write and think in daily.",
     items: ["TypeScript", "JavaScript", "SQL (PostgreSQL)"],
     familiar: ["Go", "Ruby on Rails"],
   },
   {
     title: "Frontend",
+    caption: "Building fast, accessible interfaces.",
     items: ["React", "Redux", "Tailwind CSS"],
     familiar: ["Svelte", "React Native"],
   },
   {
     title: "Backend & Security",
+    caption: "APIs, auth, and business logic that scale.",
     items: ["Node.js", "Express", "RESTful APIs", "RBAC"],
     familiar: [],
   },
   {
     title: "Data & Tools",
+    caption: "Pipelines, integrations, and the tools that ship them.",
     items: ["Apache Kafka", "CDC", "Celigo", "Git", "Claude Code"],
     familiar: [],
   },

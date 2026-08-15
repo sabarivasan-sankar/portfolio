@@ -4,11 +4,16 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SectionHeading from "./SectionHeading";
 import { skillGroups, competence } from "../lib/data";
+import { CodeIcon, LayoutIcon, ServerIcon, DatabaseIcon } from "./Icons";
 
 gsap.registerPlugin(ScrollTrigger);
 
+const icons = [CodeIcon, LayoutIcon, ServerIcon, DatabaseIcon];
+
 const SkillsSection = () => {
   const sectionRef = useRef(null);
+  const pinRef = useRef(null);
+  const trackRef = useRef(null);
   const marqueeRef = useRef(null);
 
   useGSAP(
@@ -26,17 +31,38 @@ const SkillsSection = () => {
       );
 
       gsap.fromTo(
-        ".skill-row",
-        { y: 24, opacity: 0 },
+        ".skill-card",
+        { opacity: 0 },
         {
-          y: 0,
           opacity: 1,
           duration: 0.6,
-          stagger: 0.1,
-          ease: "power3.out",
-          scrollTrigger: { trigger: ".skill-list", start: "top 78%" },
+          stagger: 0.15,
+          ease: "power2.out",
+          scrollTrigger: { trigger: pinRef.current, start: "top 85%" },
         },
       );
+
+      ScrollTrigger.matchMedia({
+        "(min-width: 768px)": () => {
+          const track = trackRef.current;
+          const pinEl = pinRef.current;
+          const getScrollAmount = () => track.scrollWidth - pinEl.offsetWidth;
+
+          const tween = gsap.to(track, { x: () => -getScrollAmount(), ease: "none" });
+
+          const getNavOffset = () => document.querySelector("header")?.offsetHeight || 0;
+
+          ScrollTrigger.create({
+            trigger: pinEl,
+            start: () => "top " + getNavOffset(),
+            end: () => "+=" + getScrollAmount(),
+            pin: true,
+            scrub: 1,
+            invalidateOnRefresh: true,
+            animation: tween,
+          });
+        },
+      });
 
       const marqueeTween = gsap.to(marqueeRef.current, {
         xPercent: -50,
@@ -60,50 +86,54 @@ const SkillsSection = () => {
   );
 
   return (
-    <section id="skills" ref={sectionRef} className="px-6 md:px-16 py-12 md:py-20 scroll-mt-24">
-      <SectionHeading index="03" label="Skills" title="What I work with" />
+    <section id="skills" ref={sectionRef} className="py-12 md:py-20 scroll-mt-24">
+      <div className="px-6 md:px-16">
+        <SectionHeading index="03" label="Skills" title="What I work with" />
+      </div>
 
-      <div className="skill-list flex flex-col divide-y divide-outline-variant/20 mt-12">
-        {skillGroups.map((group, i) => {
-          const tags = [
-            ...group.items.map((t) => ({ text: t, familiar: false })),
-            ...group.familiar.map((t) => ({ text: t, familiar: true })),
-          ];
-          return (
-            <div
-              key={group.title}
-              className="skill-row group relative flex flex-col md:flex-row md:items-baseline gap-2 md:gap-10 py-6 md:pl-6"
-            >
-              <span className="absolute left-0 top-0 bottom-0 w-px bg-secondary origin-top scale-y-0 group-hover:scale-y-100 transition-transform duration-300 ease-out hidden md:block" />
-
-              <div className="flex items-baseline gap-3 md:w-52 shrink-0">
-                <span className="font-jet text-xs text-outline tracking-widest">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <h3 className="font-serif4 font-bold text-2xl text-on-surface group-hover:text-secondary transition-colors duration-300">
-                  {group.title}
-                </h3>
-              </div>
-
-              <div className="flex flex-wrap items-baseline gap-x-1 gap-y-2 font-jet text-sm flex-1">
-                {tags.map((tag, idx) => (
-                  <span key={tag.text} className="flex items-baseline">
-                    <span className={tag.familiar ? "text-outline italic" : "text-on-surface-variant"}>
-                      {tag.text}
+      <div ref={pinRef} className="skills-pin relative mt-12 md:overflow-hidden">
+        <div
+          ref={trackRef}
+          className="skills-track flex flex-col md:flex-row gap-5 px-6 md:px-16 md:w-max will-change-transform"
+        >
+          {skillGroups.map((group, i) => {
+            const Icon = icons[i % icons.length];
+            return (
+              <div
+                key={group.title}
+                className="skill-card bg-surface-container-lowest border border-outline-variant/25 rounded-2xl p-8 flex flex-col items-center text-center hover:border-secondary/50 transition-colors duration-300 md:w-[380px] lg:w-[420px] md:shrink-0"
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <Icon className="text-secondary" />
+                  <h3 className="font-serif4 font-bold text-lg text-on-surface">{group.title}</h3>
+                </div>
+                <p className="font-inter text-sm text-on-surface-variant mb-6">{group.caption}</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {group.items.map((item) => (
+                    <span
+                      key={item}
+                      className="font-jet text-xs bg-secondary-container/40 text-on-secondary-container px-3 py-1.5 rounded-full"
+                    >
+                      {item}
                     </span>
-                    {idx < tags.length - 1 && (
-                      <span className="text-outline-variant/60 ml-3 mr-0.5">/</span>
-                    )}
-                  </span>
-                ))}
+                  ))}
+                  {group.familiar.map((item) => (
+                    <span
+                      key={item}
+                      className="font-jet text-xs bg-surface-container-high text-outline px-3 py-1.5 rounded-full"
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
       <div
-        className="mt-12 -mx-6 md:-mx-16 overflow-hidden"
+        className="mt-12 overflow-hidden"
         style={{
           maskImage: "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
           WebkitMaskImage:

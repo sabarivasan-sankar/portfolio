@@ -73,3 +73,32 @@ export const AwardIcon = (props) => (
     <path d="M8.2 13.3 6.5 21l5.5-3 5.5 3-1.7-7.7" />
   </svg>
 );
+
+export const CodeIcon = (props) => (
+  <svg viewBox="0 0 24 24" width="20" height="20" {...base} {...props}>
+    <path d="M9 6 3.5 12 9 18M15 6l5.5 6-5.5 6" />
+  </svg>
+);
+
+export const LayoutIcon = (props) => (
+  <svg viewBox="0 0 24 24" width="20" height="20" {...base} {...props}>
+    <rect x="3" y="4.5" width="18" height="15" rx="2" />
+    <path d="M3 9.5h18M9 9.5V19.5" />
+  </svg>
+);
+
+export const ServerIcon = (props) => (
+  <svg viewBox="0 0 24 24" width="20" height="20" {...base} {...props}>
+    <rect x="3.5" y="4" width="17" height="6.5" rx="1.5" />
+    <rect x="3.5" y="13.5" width="17" height="6.5" rx="1.5" />
+    <path d="M7 7.25h.01M7 16.75h.01" />
+  </svg>
+);
+
+export const DatabaseIcon = (props) => (
+  <svg viewBox="0 0 24 24" width="20" height="20" {...base} {...props}>
+    <ellipse cx="12" cy="5.5" rx="7.5" ry="3" />
+    <path d="M4.5 5.5V18c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3V5.5" />
+    <path d="M4.5 11.75c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3" />
+  </svg>
+);
