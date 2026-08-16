@@ -2,19 +2,58 @@ import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import {
+  SiTypescript,
+  SiJavascript,
+  SiPostgresql,
+  SiGo,
+  SiRubyonrails,
+  SiReact,
+  SiRedux,
+  SiTailwindcss,
+  SiSvelte,
+  SiNodedotjs,
+  SiExpress,
+  SiApachekafka,
+  SiGit,
+  SiClaude,
+} from "react-icons/si";
+import { TbApi, TbShieldLock, TbTransfer, TbPlugConnected } from "react-icons/tb";
 import SectionHeading from "./SectionHeading";
-import { skillGroups, competence } from "../lib/data";
-import { CodeIcon, LayoutIcon, ServerIcon, DatabaseIcon } from "./Icons";
+import { skillGroups } from "../lib/data";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const icons = [CodeIcon, LayoutIcon, ServerIcon, DatabaseIcon];
+const toolIcons = {
+  TypeScript: SiTypescript,
+  JavaScript: SiJavascript,
+  "SQL (PostgreSQL)": SiPostgresql,
+  Go: SiGo,
+  "Ruby on Rails": SiRubyonrails,
+  React: SiReact,
+  Redux: SiRedux,
+  "Tailwind CSS": SiTailwindcss,
+  Svelte: SiSvelte,
+  "React Native": SiReact,
+  "Node.js": SiNodedotjs,
+  Express: SiExpress,
+  "RESTful APIs": TbApi,
+  RBAC: TbShieldLock,
+  "Apache Kafka": SiApachekafka,
+  CDC: TbTransfer,
+  Celigo: TbPlugConnected,
+  Git: SiGit,
+  "Claude Code": SiClaude,
+};
+
+const tools = Array.from(new Set(skillGroups.flatMap((g) => [...g.items, ...g.familiar])));
+const familiarTools = new Set(skillGroups.flatMap((g) => g.familiar));
 
 const SkillsSection = () => {
   const sectionRef = useRef(null);
   const pinRef = useRef(null);
-  const trackRef = useRef(null);
-  const marqueeRef = useRef(null);
+  const toolsWrapRef = useRef(null);
+  const toolsTrackRef = useRef(null);
 
   useGSAP(
     () => {
@@ -31,124 +70,98 @@ const SkillsSection = () => {
       );
 
       gsap.fromTo(
-        ".skill-card",
+        ".tool-item",
         { opacity: 0 },
         {
           opacity: 1,
-          duration: 0.6,
-          stagger: 0.15,
+          duration: 0.5,
+          stagger: 0.04,
           ease: "power2.out",
-          scrollTrigger: { trigger: pinRef.current, start: "top 85%" },
+          scrollTrigger: { trigger: toolsWrapRef.current, start: "top 85%" },
         },
       );
 
-      ScrollTrigger.matchMedia({
-        "(min-width: 768px)": () => {
-          const track = trackRef.current;
-          const pinEl = pinRef.current;
-          const getScrollAmount = () => track.scrollWidth - pinEl.offsetWidth;
+      const toolsTrack = toolsTrackRef.current;
+      const toolsWrap = toolsWrapRef.current;
+      const getToolsOffset = () => Math.max(0, toolsTrack.scrollWidth - toolsWrap.offsetWidth);
+      // Slightly longer than the raw pixel offset so the reveal paces itself
+      // more slowly relative to how far the page actually scrolls.
+      const getPinDistance = () => getToolsOffset() * 1.3;
 
-          const tween = gsap.to(track, { x: () => -getScrollAmount(), ease: "none" });
+      const toolsTween = gsap.to(toolsTrack, { x: () => -getToolsOffset(), ease: "none" });
 
-          const getNavOffset = () => document.querySelector("header")?.offsetHeight || 0;
-
-          ScrollTrigger.create({
-            trigger: pinEl,
-            start: () => "top " + getNavOffset(),
-            end: () => "+=" + getScrollAmount(),
-            pin: true,
-            scrub: 1,
-            invalidateOnRefresh: true,
-            animation: tween,
-          });
-        },
+      ScrollTrigger.create({
+        trigger: pinRef.current,
+        start: "center center",
+        end: () => "+=" + getPinDistance(),
+        pin: true,
+        scrub: 1.2,
+        invalidateOnRefresh: true,
+        animation: toolsTween,
       });
-
-      const marqueeTween = gsap.to(marqueeRef.current, {
-        xPercent: -50,
-        duration: 26,
-        ease: "none",
-        repeat: -1,
-      });
-
-      const marqueeEl = marqueeRef.current.parentElement;
-      const onEnter = () => gsap.to(marqueeTween, { timeScale: 0, duration: 0.4 });
-      const onLeave = () => gsap.to(marqueeTween, { timeScale: 1, duration: 0.4 });
-      marqueeEl.addEventListener("mouseenter", onEnter);
-      marqueeEl.addEventListener("mouseleave", onLeave);
-
-      return () => {
-        marqueeEl.removeEventListener("mouseenter", onEnter);
-        marqueeEl.removeEventListener("mouseleave", onLeave);
-      };
     },
     { scope: sectionRef },
   );
 
   return (
     <section id="skills" ref={sectionRef} className="py-12 md:py-20 scroll-mt-24">
-      <div className="px-6 md:px-16">
-        <SectionHeading index="03" label="Skills" title="What I work with" />
-      </div>
-
-      <div ref={pinRef} className="skills-pin relative mt-12 md:overflow-hidden">
-        <div
-          ref={trackRef}
-          className="skills-track flex flex-col md:flex-row gap-5 px-6 md:px-16 md:w-max will-change-transform"
-        >
-          {skillGroups.map((group, i) => {
-            const Icon = icons[i % icons.length];
-            return (
-              <div
-                key={group.title}
-                className="skill-card bg-surface-container-lowest border border-outline-variant/25 rounded-2xl p-8 flex flex-col items-center text-center hover:border-secondary/50 transition-colors duration-300 md:w-[380px] lg:w-[420px] md:shrink-0"
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  <Icon className="text-secondary" />
-                  <h3 className="font-serif4 font-bold text-lg text-on-surface">{group.title}</h3>
-                </div>
-                <p className="font-inter text-sm text-on-surface-variant mb-6">{group.caption}</p>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {group.items.map((item) => (
-                    <span
-                      key={item}
-                      className="font-jet text-xs bg-secondary-container/40 text-on-secondary-container px-3 py-1.5 rounded-full"
-                    >
-                      {item}
-                    </span>
-                  ))}
-                  {group.familiar.map((item) => (
-                    <span
-                      key={item}
-                      className="font-jet text-xs bg-surface-container-high text-outline px-3 py-1.5 rounded-full"
-                    >
-                      {item}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div
-        className="mt-12 overflow-hidden"
-        style={{
-          maskImage: "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
-          WebkitMaskImage:
-            "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
-        }}
-      >
-        <div ref={marqueeRef} className="flex gap-4 w-max">
-          {[...competence, ...competence].map((tag, i) => (
-            <span
-              key={`${tag}-${i}`}
-              className="font-jet text-sm text-on-surface-variant border border-outline-variant/40 bg-surface-container-lowest px-5 py-2.5 rounded-full whitespace-nowrap shrink-0"
-            >
-              {tag}
+      <div ref={pinRef}>
+        <div className="px-6 md:px-16">
+          <SectionHeading index="03" label="Skills" title="What I work with" />
+          <div className="flex items-center gap-5 mt-4 font-jet text-xs text-outline">
+            <span className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              Experienced with
             </span>
-          ))}
+            <span className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-blue-500" />
+              Familiar with
+            </span>
+          </div>
+        </div>
+
+        <div
+          ref={toolsWrapRef}
+          className="mt-8 md:mt-12 overflow-hidden"
+          style={{
+            maskImage: "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+            WebkitMaskImage:
+              "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+          }}
+        >
+          <div
+            ref={toolsTrackRef}
+            className="flex gap-8 md:gap-10 w-max px-6 md:px-16 pt-3 md:pt-4 will-change-transform"
+          >
+            {tools.map((tool) => {
+              const Icon = toolIcons[tool];
+              const isFamiliar = familiarTools.has(tool);
+              return (
+                <div key={tool} className="tool-item flex flex-col items-center gap-4 w-32 md:w-44 shrink-0">
+                  <div
+                    className={`relative w-28 h-28 md:w-40 md:h-40 rounded-3xl border flex items-center justify-center text-on-surface-variant transition-colors duration-300 ${
+                      isFamiliar
+                        ? "bg-blue-50 border-blue-200 hover:border-blue-400"
+                        : "bg-emerald-50 border-emerald-200 hover:border-emerald-400"
+                    }`}
+                  >
+                    <Icon size={52} className="md:hidden" />
+                    <Icon size={72} className="hidden md:block" />
+                    <span
+                      className={`absolute -top-2 -right-2 font-jet text-[9px] md:text-[10px] uppercase tracking-wide text-white px-2 py-0.5 rounded-full whitespace-nowrap ${
+                        isFamiliar ? "bg-blue-500" : "bg-emerald-500"
+                      }`}
+                    >
+                      {isFamiliar ? "Familiar" : "Experienced"}
+                    </span>
+                  </div>
+                  <span className="font-jet text-sm md:text-base text-center text-on-surface-variant leading-tight">
+                    {tool}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>
