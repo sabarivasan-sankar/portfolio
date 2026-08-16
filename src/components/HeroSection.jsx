@@ -3,27 +3,45 @@ import gsap from "gsap";
 import { SplitText } from "gsap/all";
 import BackgroundShader from "./Shader";
 
-const HeroSection = () => {
-  useGSAP(() => {
-    const codeSplit = new SplitText(".code-body", {
-      type: "chars",
-    });
+const HeroSection = ({ ready = true }) => {
+  useGSAP(
+    () => {
+      // Stay hidden from the very first render, not just while the preloader
+      // curtain covers it — otherwise these sit fully visible underneath the
+      // curtain and the entrance tween snaps them back to hidden the instant
+      // it starts, reading as the page "finishing" then replaying itself.
+      gsap.set(".name-and-role .font-jet", { opacity: 0, y: 20 });
+      gsap.set(".role", { opacity: 0, y: 30 });
+      gsap.set(".description", { opacity: 0, y: 20 });
+      gsap.set(".hero-actions > *", { opacity: 0, y: 16 });
+      gsap.set(".code", { opacity: 0, y: 30 });
 
-    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-    tl.from(".name-and-role .font-jet", { opacity: 0, y: 20, duration: 0.5 })
-      .from([".name", ".role"], { opacity: 0, y: 30, duration: 0.7 }, "-=0.25")
-      .from(".description", { y: 20, opacity: 0, duration: 0.6 }, "-=0.3")
-      .from(".hero-actions > *", { y: 16, opacity: 0, duration: 0.5, stagger: 0.1 }, "-=0.3")
-      .from(".code", { y: 30, opacity: 0, duration: 0.7, ease: "power3.out" }, "-=0.6");
+      // The name itself is revealed by the preloader's own merge animation —
+      // wait for that to finish before the rest of the hero plays, so this
+      // entrance is actually seen instead of completing behind the curtain.
+      if (!ready) return;
 
-    gsap.from(codeSplit.chars, {
-      opacity: 0,
-      duration: 0.012,
-      stagger: 0.014,
-      ease: "none",
-      delay: 0.9,
-    });
-  }, []);
+      const codeSplit = new SplitText(".code-body", {
+        type: "chars",
+      });
+
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+      tl.to(".name-and-role .font-jet", { opacity: 1, y: 0, duration: 0.5 })
+        .to(".role", { opacity: 1, y: 0, duration: 0.7 }, "-=0.25")
+        .to(".description", { y: 0, opacity: 1, duration: 0.6 }, "-=0.3")
+        .to(".hero-actions > *", { y: 0, opacity: 1, duration: 0.5, stagger: 0.1 }, "-=0.3")
+        .to(".code", { y: 0, opacity: 1, duration: 0.7, ease: "power3.out" }, "-=0.6");
+
+      gsap.from(codeSplit.chars, {
+        opacity: 0,
+        duration: 0.012,
+        stagger: 0.014,
+        ease: "none",
+        delay: 0.9,
+      });
+    },
+    { dependencies: [ready] }
+  );
   return (
       <section id="home" className="relative overflow-hidden p-4 flex justify-around items-center-safe flex-wrap gap-6 min-h-[calc(100vh-81px)] scroll-mt-24">
         <BackgroundShader />

@@ -17,6 +17,7 @@ const links = [
 function Navbar() {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [active, setActive] = useState("home");
   const headerRef = useRef(null);
   const linksRef = useRef([]);
   const mobilePanelRef = useRef(null);
@@ -49,6 +50,18 @@ function Navbar() {
             boxShadow: `0 10px 30px -12px rgba(11, 28, 48, ${gsap.utils.interpolate(0, 0.18, self.progress)})`,
           });
         },
+      });
+
+      links.forEach((item) => {
+        const el = document.getElementById(item.link);
+        if (!el) return;
+        ScrollTrigger.create({
+          trigger: el,
+          start: "top center",
+          end: "bottom center",
+          onEnter: () => setActive(item.link),
+          onEnterBack: () => setActive(item.link),
+        });
       });
     },
     { scope: headerRef },
@@ -103,17 +116,26 @@ function Navbar() {
       </a>
 
       <nav className="gap-8 items-center hidden md:flex">
-        {links.map((item) => (
-          <a
-            ref={addLinkRef}
-            key={item.link}
-            href={`#${item.link}`}
-            className="font-inter text-on-surface-variant hover:text-primary transition-colors relative group"
-          >
-            {item.name}
-            <span className="absolute left-0 -bottom-1 h-px w-0 bg-secondary transition-all duration-300 group-hover:w-full" />
-          </a>
-        ))}
+        {links.map((item) => {
+          const isActive = active === item.link;
+          return (
+            <a
+              ref={addLinkRef}
+              key={item.link}
+              href={`#${item.link}`}
+              className={`font-inter transition-colors relative group ${
+                isActive ? "font-bold text-primary" : "text-on-surface-variant hover:text-primary"
+              }`}
+            >
+              {item.name}
+              <span
+                className={`absolute left-0 -bottom-1 h-px bg-secondary transition-all duration-300 ${
+                  isActive ? "w-full" : "w-0 group-hover:w-full"
+                }`}
+              />
+            </a>
+          );
+        })}
       </nav>
 
       <div className="nav-actions flex items-center gap-3">
@@ -141,17 +163,22 @@ function Navbar() {
         ref={mobilePanelRef}
         className="md:hidden fixed inset-x-0 bottom-0 bg-surface flex flex-col gap-2 px-6 py-8 z-40"
       >
-        {links.map((item) => (
-          <a
-            ref={addMobileLinkRef}
-            key={item.link}
-            href={`#${item.link}`}
-            onClick={closeMenu}
-            className="font-serif4 text-3xl font-bold text-on-surface py-3 border-b border-outline-variant/20"
-          >
-            {item.name}
-          </a>
-        ))}
+        {links.map((item) => {
+          const isActive = active === item.link;
+          return (
+            <a
+              ref={addMobileLinkRef}
+              key={item.link}
+              href={`#${item.link}`}
+              onClick={closeMenu}
+              className={`font-serif4 text-3xl py-3 border-b border-outline-variant/20 ${
+                isActive ? "font-bold text-primary" : "font-bold text-on-surface"
+              }`}
+            >
+              {item.name}
+            </a>
+          );
+        })}
         <a
           ref={addMobileLinkRef}
           href="/resume.pdf"
